@@ -6,9 +6,6 @@ require('dotenv').config();
 const port = process.env.PORT || 5000;
 const ObjectId = require('mongodb').ObjectId;
 
-// user: powerhack
-// pass: sEI1w4iGES1p5B2V
-
 // Middle-Wire
 app.use(cors());
 app.use(express.json());
@@ -28,7 +25,6 @@ async function run() {
     app.post('/add-billing', async (req, res) => {
       const bill = req.body;
       const result = await billCollection.insertOne(bill);
-
       res.json(result);
     });
 
@@ -36,6 +32,14 @@ async function run() {
       const cursor = billCollection.find({});
       const result = await cursor.toArray();
       res.send(result);
+    });
+
+    // Find Single bill
+    app.get('/bill/:id', async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: ObjectId(id) };
+      const result = await billCollection.findOne(query);
+      res.json(result);
     });
 
     //Find All Bills with pagination
@@ -60,16 +64,30 @@ async function run() {
       });
     });
 
+    //Update pending status
+    app.put('/update-billing/:id', async (req, res) => {
+      const id = req.params.id;
+      const updatedBill = req.body;
+      const filter = { _id: ObjectId(id) };
+      const options = { upsert: true };
+      const updateDoc = {
+        $set: {
+          name: updatedBill.name,
+          email: updatedBill.email,
+          phone: updatedBill.phone,
+          paidAmount: updatedBill.paidAmount,
+        },
+      };
+      const result = await billCollection.updateOne(filter, updateDoc, options);
+      res.json(result);
+    });
+
     //Delete A bill
     app.delete('/delete-billing/:id', async (req, res) => {
       const id = req.params.id;
       const query = { _id: ObjectId(id) };
       const result = await billCollection.deleteOne(query);
       res.json(result);
-    });
-
-    app.get('/registration', async (req, res) => {
-      res.send('');
     });
   } finally {
     // client.close();
