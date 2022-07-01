@@ -32,6 +32,12 @@ async function run() {
       res.json(result);
     });
 
+    app.get('/billing-listing', async (req, res) => {
+      const cursor = billCollection.find({});
+      const result = await cursor.toArray();
+      res.send(result);
+    });
+
     //Find All Bills with pagination
     app.get('/billing-list', async (req, res) => {
       const page = req.query.page;
