@@ -14,7 +14,6 @@ app.use(cors());
 app.use(express.json());
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.b4g6x.mongodb.net/?retryWrites=true&w=majority`;
-console.log(uri);
 const client = new MongoClient(uri, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
@@ -24,24 +23,21 @@ const client = new MongoClient(uri, {
 async function run() {
   try {
     const billCollection = client.db('powerHack').collection('bills');
-    console.log('hitting db');
 
     // Inserting new bill
     app.post('/add-billing', async (req, res) => {
-      console.log('hitting inserting single bills');
       const bill = req.body;
       const result = await billCollection.insertOne(bill);
-      console.log('added new bill', result);
+
       res.json(result);
     });
 
-    //Find All Bills
+    //Find All Bills with pagination
     app.get('/billing-list', async (req, res) => {
       const page = req.query.page;
       const size = parseInt(req.query.size);
       const cursor = billCollection.find({});
       const count = await cursor.count();
-      console.log('count is', count);
       let bills;
 
       if (page) {
@@ -56,6 +52,14 @@ async function run() {
         count,
         bills,
       });
+    });
+
+    //Delete A bill
+    app.delete('/delete-billing/:id', async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: ObjectId(id) };
+      const result = await billCollection.deleteOne(query);
+      res.json(result);
     });
 
     app.get('/registration', async (req, res) => {
